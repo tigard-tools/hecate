@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hecate Web Console</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0f14'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23b061ff'%3E%E2%98%BE%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">☾</span>
+      <span class="brand-name">Hecate</span>
+      <span class="brand-sub">Web Console</span>
+    </div>
+    <div class="status-cluster" id="status-cluster">
+      <button class="chip" id="chip-drive" type="button" title="Connect the CIRCUITPY drive">
+        <span class="dot" data-state="off"></span>
+        <span class="chip-label">Drive</span>
+      </button>
+      <button class="chip" id="chip-monitor" type="button" title="Connect the serial monitor">
+        <span class="dot" data-state="off"></span>
+        <span class="chip-label">Monitor</span>
+      </button>
+      <button class="chip" id="chip-console" type="button" title="Connect the REPL console (used to save code.py)">
+        <span class="dot" data-state="off"></span>
+        <span class="chip-label">REPL</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================ LANDING ============================ -->
+  <section class="landing" id="landing">
+    <div class="landing-card">
+      <div class="landing-glyph">☾</div>
+      <h1>No Hecate detected</h1>
+      <p class="landing-lead">
+        Plug your Xiaomao into this laptop with a USB-C cable, then connect the two
+        halves below. You need <strong>both</strong> for the full workshop console.
+      </p>
+
+      <div class="landing-steps">
+        <div class="step">
+          <div class="step-head"><span class="step-num">1</span> Open the drive</div>
+          <p>
+            Grants read/write to the <code>CIRCUITPY</code> drive so you can edit
+            <code>code.py</code>. Editing only works when the board is plugged in
+            normally (don't hold the button while plugging in).
+          </p>
+          <button class="btn btn-primary" id="btn-open-drive" type="button">Open CIRCUITPY drive…</button>
+          <p class="hint" id="drive-hint"></p>
+        </div>
+        <div class="step">
+          <div class="step-head"><span class="step-num">2</span> Connect the monitor</div>
+          <p>
+            Opens the serial <em>monitor</em> port to live-tail what Hecate sees on the
+            wire. Pick the port whose name usually ends in the higher number
+            (e.g. <code>ACM1</code> / the second COM port).
+          </p>
+          <button class="btn" id="btn-connect-monitor" type="button">Connect monitor…</button>
+          <p class="hint" id="monitor-hint"></p>
+        </div>
+      </div>
+
+      <p class="landing-poll">
+        <span class="spinner" aria-hidden="true"></span>
+        Watching for a board… this page keeps checking automatically.
+      </p>
+
+      <p class="landing-foot" id="landing-compat"></p>
+    </div>
+  </section>
+
+  <!-- ============================ CONSOLE ============================ -->
+  <main class="console" id="console" hidden>
+    <div class="tabbar" role="tablist">
+      <button class="tab" data-pane="files" role="tab">Files</button>
+      <button class="tab is-active" data-pane="editor" role="tab">Editor</button>
+      <button class="tab" data-pane="monitor" role="tab">Monitor</button>
+    </div>
+
+    <!-- Files -->
+    <section class="pane pane-files" data-pane="files">
+      <div class="pane-head">
+        <h2>Files</h2>
+        <div class="pane-actions">
+          <button class="btn btn-sm" id="btn-refresh-files" type="button" title="Refresh listing">↻</button>
+        </div>
+      </div>
+      <nav class="breadcrumb" id="breadcrumb"></nav>
+      <ul class="filelist" id="filelist"></ul>
+      <div class="pane-foot" id="drive-info"></div>
+    </section>
+
+    <!-- Editor -->
+    <section class="pane pane-editor" data-pane="editor">
+      <div class="pane-head">
+        <h2>
+          <span id="editor-filename">code.py</span>
+          <span class="badge" id="editor-badge" hidden></span>
+          <span class="dirty-dot" id="dirty-dot" hidden title="Unsaved changes">●</span>
+        </h2>
+        <div class="pane-actions">
+          <button class="btn btn-sm" id="btn-revert" type="button" title="Discard changes and reload from the board">Revert</button>
+          <button class="btn btn-sm" id="btn-edit-codepy" type="button" title="Jump back to code.py">Edit code.py</button>
+          <button class="btn btn-sm btn-primary" id="btn-save" type="button" title="Save (Ctrl/Cmd+S)">Save</button>
+        </div>
+      </div>
+      <div class="editor-banner" id="editor-banner" hidden></div>
+      <div class="editor-wrap">
+        <div id="editor" class="editor"></div>
+      </div>
+      <div class="pane-foot" id="editor-status"></div>
+    </section>
+
+    <!-- Monitor -->
+    <section class="pane pane-monitor" data-pane="monitor">
+      <div class="pane-head">
+        <h2>Monitor <span class="badge badge-quiet" id="monitor-badge" hidden></span></h2>
+        <div class="pane-actions">
+          <label class="toggle" title="Follow new output">
+            <input type="checkbox" id="autoscroll" checked /> follow
+          </label>
+          <button class="btn btn-sm" id="btn-clear-monitor" type="button">Clear</button>
+          <button class="btn btn-sm" id="btn-reconnect-monitor" type="button" hidden>Reconnect</button>
+        </div>
+      </div>
+      <pre class="monitor-out" id="monitor-out" tabindex="0"></pre>
+      <div class="pane-foot" id="monitor-status"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

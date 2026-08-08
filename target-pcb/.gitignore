@@ -1,0 +1,44 @@
+# For PCBs designed using KiCad: http://www.kicad.org/
+# Format documentation: http://kicad.org/help/file-formats/
+
+# Temporary files
+*.000
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.sch-bak
+*~
+_autosave-*
+*.tmp
+*-save.pro
+*-save.kicad_pcb
+fp-info-cache
+*csv#
+
+*.kicad_*.lck
+
+# Personal preferences file
+*.kicad_prl
+
+# Netlist files (exported from Eeschema)
+*.net
+
+# Autorouter files (exported from Pcbnew)
+*.dsn
+*.ses
+
+# Exported BOM files
+*.xml
+*.csv
+
+# Gerbers
+*.zip
+*gerber*
+xiaotagulator-prod/
+
+# Rescues
+*-rescue.dcm
+*-rescue.lib
+
+out/

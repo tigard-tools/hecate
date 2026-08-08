@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Isolated bundle check used by smoke.mjs; not part of the shipped console. -->
+<html><head><meta charset="utf-8"><title>cm-smoke</title></head>
+<body>
+<div id="mount" style="height:300px"></div>
+<script type="module">
+  import { EditorView, EditorState, Compartment, basicSetup, keymap,
+           placeholder, indentWithTab, python, oneDark }
+    from "../vendor/codemirror.js";
+  const src = "import board\n\ndef greet(name):\n    # say hi\n    return f'hello {name}'\n\nprint(greet('hecate'))\n";
+  const ro = new Compartment();
+  const view = new EditorView({
+    parent: document.getElementById("mount"),
+    state: EditorState.create({
+      doc: src,
+      extensions: [basicSetup, python(), oneDark, keymap.of([indentWithTab]),
+                   placeholder("open code.py…"),
+                   ro.of([EditorState.readOnly.of(false), EditorView.editable.of(true)])],
+    }),
+  });
+  const tokens = document.querySelectorAll("#mount .cm-line span").length;
+  const doc = view.state.doc.toString();
+  window.__smoke = { hasEditor: !!document.querySelector(".cm-editor"),
+                     tokenSpans: tokens, docMatches: doc === src };
+</script>
+</body></html>

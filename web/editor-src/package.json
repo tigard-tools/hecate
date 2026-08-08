@@ -1,0 +1,20 @@
+{
+  "name": "hecate-web-editor",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Builds the vendored CodeMirror 6 bundle used by the Hecate web console. The built artifact lives at ../vendor/codemirror.js and is checked in, so the console itself needs no build step or network access.",
+  "scripts": {
+    "build": "esbuild entry.js --bundle --format=esm --minify --legal-comments=none --outfile=../vendor/codemirror.js",
+    "smoke": "node smoke.mjs && node app-smoke.mjs"
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.28.0",
+    "codemirror": "^6.0.1",
+    "esbuild": "^0.23.0",
+    "puppeteer-core": "^22.15.0"
+  }
+}
