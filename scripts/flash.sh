@@ -23,6 +23,11 @@ SUDO="${SUDO:-sudo}"
 POLL="${POLL:-0.4}"           # seconds between device scans
 WAIT_REBOOT="${WAIT_REBOOT:-45}"   # seconds to wait for a board to re-enumerate
 
+OS="${OS:-$(uname -s)}"      # Linux or Darwin (macOS): selects discovery + mounting
+VOLROOT="${VOLROOT:-/Volumes}"  # where macOS auto-mounts drives (overridable for tests)
+# macOS: don't scatter ._AppleDouble sidecars onto the FAT drive during cp.
+[ "$OS" = Darwin ] && export COPYFILE_DISABLE=1
+
 # Files copied to a CIRCUITPY drive by the `hecate` step.
 HECATE_FILES=(boot.py code.py hecate.py)
 HECATE_DIRS=(lib)
@@ -54,9 +59,26 @@ warn() { printf '\033[33m!\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 # --- device discovery ------------------------------------------------------
-# Emit one "dev|label|mountpoint" line per block device labelled RPI-RP2 or
-# CIRCUITPY. lsblk -P gives shell-quoted KEY="value" pairs, safe to eval.
+# Emit one "dev|label|mountpoint" line per board labelled RPI-RP2 or CIRCUITPY.
+#   Linux : lsblk -P gives shell-quoted KEY="value" pairs, safe to eval; the
+#           block device (/dev/...) is the handle and may be unmounted.
+#   macOS : drives auto-mount under $VOLROOT/<label>; the mountpoint IS the
+#           handle (no device node needed). A hub of several CIRCUITPY boards
+#           gets unique paths (CIRCUITPY, "CIRCUITPY 1", …), so the mountpoint
+#           disambiguates them the way the /dev node does on Linux.
 list_boards() {
+  if [ "$OS" = Darwin ]; then
+    local v base
+    for v in "$VOLROOT"/*; do
+      [ -d "$v" ] || continue
+      base="$(basename "$v")"
+      case "$base" in
+        CIRCUITPY*) printf '%s|%s|%s\n' "$v" "CIRCUITPY" "$v" ;;
+        RPI-RP2*)   printf '%s|%s|%s\n' "$v" "RPI-RP2"   "$v" ;;
+      esac
+    done
+    return
+  fi
   local NAME LABEL MOUNTPOINT line
   while IFS= read -r line; do
     eval "$line"
@@ -73,8 +95,15 @@ boards_with_label() { list_boards | awk -F'|' -v l="$1" '$2==l'; }
 list_board_keys() { list_boards | cut -d'|' -f1,2; }
 
 # Mount a device (or reuse an existing mount); sets MNT to the mountpoint.
+# On macOS the OS already mounted it under $VOLROOT and the dev handle *is* the
+# mountpoint, so this is a no-op that just records MNT (nothing to unmount later,
+# so OURS_MOUNTS stays empty and release_dev/cleanup naturally do nothing).
 mount_dev() {
   local dev="$1" existing mnt
+  if [ "$OS" = Darwin ]; then
+    MNT="$dev"
+    return 0
+  fi
   existing="$(findmnt -nfo TARGET --source "$dev" 2>/dev/null | head -1)"
   if [ -n "$existing" ]; then MNT="$existing"; return 0; fi
   mnt="${TMPDIR:-/tmp}/hecate-flash/$(basename "$dev")"
