@@ -14,7 +14,7 @@ FLASH       := scripts/flash.sh
 # vendor it. The build is board-specific: securinghw-xiaomao.
 FIRMWARE       ?= firmware/firmware.uf2
 CP_UF2_URL     ?= https://github.com/tigard-tools/circuitpython/releases/download/second-try/firmware.uf2
-CP_UF2_SHA256  ?= 28be844082ee052c1b63b77d90d885835cf4186f7dd3935cf2284bb3cdf5b806
+CP_UF2_SHA256  ?= af0c28b26294a0ab2a61b9b75a655151e9a132ad97b0a71e667c445c388bc74e
 
 # Mounting removable drives needs privileges on a box with no automounter.
 # Set SUDO= (empty) if you already run as root.
